@@ -1,0 +1,627 @@
+---
+title: "LEARN SIMPLE R IMPLIMENTATIONS ON DATA WITH THE TITANIC DATA SET"
+author: "MUTHAMA KELVIN MUTUKU"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document: 
+    toc: yes
+    keep_tex: yes
+---
+
+## WHAT IS EXPECTED OF THE LEARNER.
+
+At the end of the study the learner should be able to:
+
+1.  Call data in csv form.
+    -   view the data set.
+    -   show and explain the structure of a given data set.
+2.  Restore all variables to their required data types.
+3.  Draw insights from the data set given.
+4.  Visualize the data and draw insights in various plots.
+5.  model data accordingly; fitting the data to the correct model.
+
+## TITANIC DATA SET.
+
+In this study we will use the **TITANIC DATA SET**. The Titanic dataset, often used for machine learning and data analysis projects, typically includes various attributes about the passengers and details about their journey. The most commonly used version is available on Kaggle, and it usually includes the following columns:
+
+1.  **PassengerId**: Unique identifier for each passenger.
+2.  **Survived**: Survival status (0 = No, 1 = Yes).
+3.  **Pclass**: Ticket class (1 = 1st, 2 = 2nd, 3 = 3rd).
+4.  **Name**: Passenger's name.
+5.  **Sex**: Gender of the passenger.
+6.  **Age**: Age of the passenger.
+7.  **SibSp**: Number of siblings or spouses aboard the Titanic.
+8.  **Parch**: Number of parents or children aboard the Titanic.
+9.  **Ticket**: Ticket number.
+10. **Fare**: Fare paid for the ticket.
+11. **Cabin**: Cabin number (if available).
+12. **Embarked**: Port of embarkation (C = Cherbourg, Q = Queenstown, S = Southampton).
+
+This data set allows for various types of analyses and modeling, such as predicting survival, exploring correlations, and performing feature engineering. Is there a specific analysis or task you have in mind with the Titanic dataset.
+
+### 1. Predicting Survival (Classification Task)
+
+-   **Goal**: Build a model to predict whether a passenger survived or not.
+-   **Expected Result**: A classification model (e.g., logistic regression, decision tree, random forest, etc.) with performance metrics such as accuracy, precision, recall, and F1-score. An accuracy around 70-80% is often considered reasonable for this dataset.
+
+### 2. Data Exploration and Visualization
+
+-   **Goal**: Understand the dataset through exploratory data analysis (EDA).
+-   **Expected Result**: Insights and visualizations such as:
+    -   Distribution of passengers by class, gender, and age.
+    -   Survival rates by different features (e.g., gender, class, age).
+    -   Correlations between different features and survival.
+
+### 3. Feature Engineering
+
+-   **Goal**: Create new features that could improve model performance.
+-   **Expected Result**: New features such as:
+    -   Family size (combining SibSp and Parch).
+    -   Title extracted from the Name column.
+    -   Age group bins.
+    -   Fare per person (Fare divided by the number of people in the same ticket).
+
+### 4. Model Evaluation and Comparison
+
+-   **Goal**: Compare different models to find the best performing one.
+-   **Expected Result**: Performance metrics (accuracy, precision, recall, F1-score, ROC-AUC) for different models and a discussion of the best model based on these metrics.
+
+### 5. Deployment
+
+-   **Goal**: Deploy the model for practical use.
+-   **Expected Result**: A deployed model that can take new passenger data as input and predict the survival outcome. This could be done using a web application, API, or other means.
+
+### Example Workflow:
+
+In this series we will follow the data science problem procedure:
+
+1.  **Problem definition.**
+
+2.  **Data acquisition.**
+
+3.  **Data Preparation.**
+
+4.  **Data manipulation.**
+
+5.  **Data visualization**
+
+6.  **Solution implementation.**
+
+7.  **Data Cleaning**: Handle missing values, correct data types, etc.
+
+8.  **EDA**: Visualize and summarize key patterns and relationships.
+
+9.  **Feature Engineering**: Create and select features that improve model performance.
+
+10. **Model Building**: Train various models and tune hyperparameters.
+
+11. **Model Evaluation**: Compare models and select the best one.
+
+12. **Conclusion**: Summarize findings and insights.
+
+## Calling the required libraries.
+
+```{r}
+library("dplyr")
+library("datasets")
+library("ggplot2")
+library("graphics")
+library("stats")
+library("ggeffects")
+library("randomForest")
+library(MASS)
+```
+
+##PROBLEM DEFINATION.
+
+This is the first thing that one does, it helps one get a drive on which direction to follow. In our case, we are in need of helping improve future survival rates in the water transport.
+
+## DATA ACQUISITION.
+
+In data acquisition one has to source information that will help in solving the problem. There are many ways of getting data:
+
+1.  web scrapping.
+2.  
+
+In our case, we already have the data provided in the Kaggle website. We only had to download and store it.
+
+Before reading the data we can set our working directory, which will ease the process of reading and writing new files.
+
+###Stetting our working directory.
+
+```{r}
+setwd("C:/Users/EliteBook/OneDrive/Desktop/DATA SCIENCE PERSONAL PROJECTS/TITANIC")
+```
+
+### Reading our data which is in csv format.
+
+```{r echo=TRUE}
+#calling the dataset
+titanic_train <- read.csv('train.csv', stringsAsFactors = FALSE, header = T)
+titanic_test <- read.csv('test.csv', stringsAsFactors = FALSE, header = T)
+```
+
+### Viewing the datasets.
+
+We can have a view of the datasets for some clear understanding and knowledge of the workflow.
+
+```{r echo=TRUE}
+#viewing the dataset
+head(titanic_train)
+```
+
+```{r}
+head(titanic_test)
+```
+
+If you are not able to understand the variables kindly refer to the (TITANIC DATA SET) topic. Viewing the data gives you a general look on what you are dealing with but with the help of **str()** you can clearly understand the data's structure.
+
+```{r}
+str(titanic_train)
+```
+
+You can now tell some essential features of the data according to:
+
+-   The dimensions (891 rows and 12 columns).
+-   The data types (int:integer, chr:character, num:numeric).
+
+```{r}
+str(titanic_test)
+```
+
+Same to the **titanic_test_data** you also can now tell some essential features of the data according to:
+
+-   The dimensions (891 rows and 11 columns),
+-   The data types (int:integer, chr:character, num:numeric).
+
+In addition you can use the **summary()** function to tell features of the dataset.
+
+```{r}
+summary(titanic_train)
+```
+
+```{r}
+summary(titanic_test)
+```
+
+With the help of this function we can check the:
+
+-   length of a given column(variable).
+-   Measure of spread of the data:
+    -   Mean.
+    -   Median.
+    -   Qua tiles.
+    -   Range.
+    -   min.
+    -   max.
+
+## Cleaning the data.
+
+In this process we will have to consider variables with: - missing values. - outliers. - Wrong datatypes.
+
+### 1. Merging the datasets.
+
+Combining the datasets will help with easy cleaning and features engineering, for we will apply them to the data as one dataset instead of repeating the processes.
+
+We first add the **Survived** variable to the test_data.
+
+```{r}
+titanic_test$Survived <- NA
+```
+
+Second, we Give the datasets some Boolean values to help differentiate them after merging.
+
+```{r}
+titanic_train$Istraindata <- TRUE
+titanic_test$Istraindata <- FALSE
+```
+
+We should check for equality in number of columns in the datasets. To do that we:
+
+```{r}
+ncol(titanic_test)
+ncol(titanic_train)
+```
+
+With the datasets having equal number of columns we go ahead and merge the datasets.
+
+```{r}
+#merging them with r-bind.
+titanic_data <- rbind(titanic_train, titanic_test)
+```
+
+### 2. Transforming the data with levels to factor.
+
+Using the **as.factor()** function we can convert a variable to being in levels. eg:
+
+The **Pclass** has three levels which are:
+
+-   class 1
+-   class 2
+-   class 3
+
+```{r}
+#setting factors to categorical data
+titanic_data$Pclass<-as.factor(titanic_data$Pclass)
+titanic_data$Embarked<-as.factor(titanic_data$Embarked)
+titanic_data$Sex<-as.factor(titanic_data$Sex)
+```
+
+If you were to call the **str()** of the data you will see that the type of some variables has changed to factor.
+
+```{r}
+str(titanic_data)
+```
+
+You will notice that even though the **survived** variable in **titanic_train_data** has two levels(0 and 1), we have not factored it. This is because we will use it for some analysis and errors call if it is factored.
+
+### 3. missing values.
+
+For the missing values there various ways of dealing with them, you can choose to:
+
+-   Ignore the missing values.
+-   Impute the missing values.
+-   Remove the missing values.
+
+All this depends on the dataset you are working on and the insights you need from the data.
+
+#### Identifying the missing values.
+
+We will first check for missing values in all the variables.
+
+```{r}
+titanic_data %>%
+  is.na() %>%
+  table()
+```
+
+We can see that we have 682 null values, but we can't tell their specific variables. To do so we can;
+
+```{r}
+filter_all(titanic_data, any_vars(is.na(.))) %>%
+  head()
+```
+
+According to our data the variables with null values are the **Age** and **Fare** variables.
+
+In addition there is a variable with **empty characters**, and this is the **embarked** variable.
+
+```{r}
+titanic_data$Embarked %>%
+  table()
+```
+
+According to our data there are two values that have empty characters.
+
+#### dealing with the missing values.
+
+We will impute our data(fill the data using mean, median or mode). Most precisely we will have to use the mean of the data.
+
+Lets begin with variable **Age**.
+
+```{r}
+#calculating the mean.
+mean.Age<- mean(titanic_data$Age, na.rm = T)
+
+mean.Age
+
+titanic_data$Age<- titanic_data %>%
+  select(Age) %>%
+  apply(c(2), . %>% {ifelse(is.na(.), mean.Age, .)})
+```
+
+Next, we can work on the missing values in **Fare**.
+
+```{r}
+mean.Fare<- mean(titanic_data$Fare, na.rm = T)
+
+mean.Fare
+
+titanic_data$Fare <- titanic_data %>%
+  select(Fare) %>%
+  apply(c(2), . %>% {ifelse(is.na(.), mean.Fare, .)})
+```
+
+Finally, we can work on the missing values in **Embarked**.
+
+```{r}
+titanic_data[titanic_data$Embarked == '', "Embarked"] <- 'S'
+```
+
+We can check if the missing values have been imputed.
+
+```{r}
+titanic_data %>%
+  is.na() %>%
+  table()
+```
+
+Before concluding on the missing values, you will notice that we have left out the missing values in **Cabin** and **418** others. This is heavy duty but you can draw your conclusions from the internet and other sources.
+
+For the **418** this is the **Survived** column we added ti the **test_data**. Now that we are done with the missing values, we can proceed to the next part.
+
+## Clustering our data into understandable and meaningful subgroups.
+
+For better understanding of the data clustering can be done, where you divide a variable set into small subsets. Eg: the variable **age** is large, but we can divide it into: The elderly, Non-youth, Youth and Children.
+
+```{r}
+#creating an age cluser
+titanic_train_data<- titanic_train_data %>%
+  mutate(age_groups = ifelse(0<=Age & Age<=13, 1, ifelse(14<=Age & Age<=35, 2, ifelse(36<=Age & Age<=60, 3, 4))))
+
+```
+
+In the data:
+
+-   1 stands for children.
+-   2 stands for youth.
+-   3 stands for adults.
+-   4 stands for elderly.
+
+Other additional clusters are as follows.
+
+```{r}
+#Additional age clusers
+titanic_data<- titanic_data %>%
+  mutate(age_groups = ifelse(0<=Age & Age<=13, 1, ifelse(14<=Age & Age<=35, 2, ifelse(36<=Age & Age<=60, 3, 4))))
+
+titanic_data<- titanic_data %>%
+  mutate(age_groups_young = ifelse(0<=Age & Age<=13, "child",ifelse(13<=Age & Age<=35, "youth", "adult")))
+
+titanic_data<- titanic_data %>%
+  mutate(age_groups_children = ifelse(0<=Age & Age<=5, "infant",ifelse(5<=Age & Age<=7, "child",ifelse(7<=Age & Age<=13, "teen", "non-child"))))
+
+titanic_data <- titanic_data %>%
+  mutate(FamilySize= Parch + SibSp + 1)
+
+titanic_data<- titanic_data %>%
+  mutate(IsAlone = ifelse(FamilySize==1,1,0))
+
+titanic_data <- titanic_data %>%
+  mutate(Eldest= stri_extract(titanic_data$Name, regex="[:alpha:]'?+[:alpha:]+,")) %>%
+  mutate(Eldest= stri_extract(titanic_data$Name, regex="[:alpha:]'?+[:alpha:]+")) 
+  
+
+titanic_data <- titanic_data %>%
+  mutate(Title= stri_extract(titanic_data$Name, regex=", [:alpha:]+.")) %>%
+  mutate(Title = trimws(stri_extract(Title, regex = " [:alpha:]+")))
+
+titanic_data <- titanic_data %>%
+  group_by(Ticket) %>%
+  mutate(PeopleSharingTicket = n(),
+         IndividualFare = Fare / PeopleSharingTicket) %>%
+  ungroup()
+```
+
+##Splitting the data.
+
+```{r}
+titanic_train_data<- titanic_data[titanic_data$Istraindata == TRUE,]
+titanic_test_data<- titanic_data[titanic_data$Istraindata == FALSE,]
+```
+
+## Grouping the data to help with analysis.
+
+With the help of **groupby()** function, we can get insights from the data as follows.
+
+```{r}
+#analysing the data by grouping
+titanic_train_data%>%
+  group_by(Pclass)%>%
+  summarise(mean(Survived))
+```
+
+using the mean we can tell chances of people surviving according to their **Pclass**. In class one, the chances of survival were .6296296 and those of class two were 0.4728261 while class three had 0.2423625. This interpretation is logic as we expect the first class to be well equipped in case of any damages or accident.
+
+```{r}
+titanic_train_data%>%
+  group_by(Sex)%>%
+  summarise(mean(Survived))
+```
+
+According to the analysis, the females had higher chances of surviving than men. In the incident women were highly considered and were offered more saving boats than men because men were believed to swim and survive hardships better.
+
+```{r}
+titanic_train_data%>%
+  group_by(SibSp)%>%
+  summarise(mean(Survived))
+```
+
+According to the analysis, it seems there were people with up to 8 siblings and that the chances of surval are not well defined but bigger families never survived. Maybe as they tried to save each other the more they died.
+
+```{r}
+titanic_train_data%>%
+  group_by(Parch)%>%
+  summarise(mean(Survived))
+```
+
+Same as the **SibSp**, it seems there were families with up to 6 children and that the chances of surval are not well defined but bigger families never survived. Maybe as they tried to save each other the more they died.
+
+```{r}
+titanic_train_data %>%
+  group_by(age_groups_children)%>%
+  summarise( mean(Survived))
+```
+
+```{r}
+#setting factors to categorical data
+titanic_train_data$Survived<- as.factor(titanic_train_data$Survived)
+```
+
+## Visualizing the data for insights
+
+In this part we will ensure that we plot variables to see their relationships and give insights
+
+```{r}
+titanic_train_data %>%
+  select(Survived, Pclass,, Fare, Ticket ,age_groups, Sex,Age) %>%
+  ggplot(data=) + 
+  geom_point(mapping =  aes(x=Fare, y= Age), stat = "identity")
+```
+
+According to the plot, we can say that the most paid fare ranges between 0-100 and the **age** between 15-50 had high numbers aboard. Two outliers are detected at the far end of the **x-axis**, measures should be carried in order to decide on how to deal with them.
+
+To check for the values we can do the following.
+
+```{r}
+filter_all(titanic_train_data, any_vars(titanic_train_data$Fare>=500))
+```
+
+You will notice that they are three points with the same fare of 512.3292, embarked destination(c), Pclass(1) and ticket number(PC 17755).
+
+```{r}
+titanic_train_data %>%
+  select(Survived, Pclass,, Fare, Ticket ,age_groups, Sex,Age) %>%
+  ggplot(data=) + 
+  geom_point(mapping =  aes(x=Fare, y= Pclass), stat = "identity")
+```
+
+Further investigation can be done as we see people in different **Pclasses** paying the same fare.
+
+```{r}
+filter_all(titanic_train_data, any_vars(titanic_train_data$Pclass==1 & titanic_train_data$Fare<500)) %>%
+  head()
+```
+
+**Below are more plots try getting insights from them, to help better your final model.**
+
+```{r}
+titanic_train_data %>%
+  select(Survived, Embarked, Pclass, Fare, Ticket ,age_groups, Sex,Age) %>%
+  ggplot(data=) + 
+  geom_point(mapping =  aes(x=Pclass, y = Fare), stat = "identity") +
+  facet_grid( Embarked ~ Sex)
+```
+
+```{r}
+titanic_train_data %>%
+  select(Survived, Embarked, Pclass, age_groups, Sex,Age) %>%
+  ggplot(data=) + 
+  geom_bar(mapping =  aes(x=Embarked, fill= factor(Survived)), color = "black", position = position_dodge())
+```
+
+```{r}
+titanic_train_data %>%
+  select(Survived, Embarked, Pclass, age_groups, Sex,Age) %>%
+  ggplot(data=) + 
+  geom_bar(mapping =  aes(x=Sex, fill= factor(Survived)), color = "black", position = position_dodge())
+```
+
+```{r}
+titanic_train_data %>%
+  select(Survived,SibSp) %>%
+  ggplot(data=) + 
+  geom_bar(mapping =  aes(x=SibSp, fill= factor(Survived)), color = "black", position = position_dodge())
+```
+
+```{r}
+titanic_train_data %>%
+  select(Survived, SibSp, Sex, age_groups) %>%
+  ggplot(data=) + 
+  geom_bar(mapping =  aes(x=SibSp, fill= factor(Survived)), color = "black", position = position_dodge()) +
+  facet_grid(Sex~age_groups)
+```
+
+```{r}
+titanic_train_data %>%
+  select(Survived, Parch) %>%
+  ggplot(data=) + 
+  geom_bar(mapping =  aes(x=Parch, fill= factor(Survived)), color = "black", position = position_dodge())
+```
+
+```{r}
+titanic_train_data %>%
+  select(Survived, Parch, Sex, age_groups) %>%
+  ggplot(data=) + 
+  geom_bar(mapping =  aes(x=Parch, fill= factor(Survived)), color = "black", position = position_dodge()) +
+  facet_grid(Sex~age_groups)
+```
+
+```{r}
+titanic_train_data %>%
+  select(Survived, Pclass, age_groups, Sex,Age) %>%
+  ggplot(data=) + 
+  geom_bar(mapping =  aes(x=Pclass, fill= factor(Survived)), color = "black", position = position_dodge()) +
+  facet_grid(Sex ~ age_groups)
+```
+
+```{r}
+titanic_train_data %>%
+  select(Survived, Pclass, age_groups, Sex,Age) %>%
+  ggplot(data=) + 
+  geom_bar(mapping =  aes(x=factor(Pclass), y = Age, fill= Survived), stat = "identity",  position=position_dodge())
+```
+
+```{r}
+titanic_train_data %>%
+  select(Survived, Pclass, age_groups, Sex,Age) %>%
+  ggplot(data=) + 
+  geom_bar(mapping =  aes(x=Pclass, y = Age, fill= factor(Survived)), stat = "identity",  position=position_dodge()) +
+  facet_grid(Sex ~ age_groups)
+```
+
+```{r}
+#setting factors to categorical data
+titanic_test_data$Survived<- as.factor(titanic_test_data$Survived)
+```
+
+## Modelling the data.
+
+In this part we will be modelling our data using models that take the predicate as Survived,
+
+### Method one for doing our prediction
+
+```{r}
+rf.model<-randomForest(factor(Survived) ~  age_groups + SibSp + Parch + Sex + Pclass + Embarked, data= titanic_train_data)
+rf.model %>%
+  predict() %>%
+  table()
+```
+
+### Method two for doing our prediction.
+
+```{r}
+titanic_train_data$Age<- titanic_train_data%>%
+  select(Age) %>%
+  apply(c(2), . %>% {ifelse(is.na(.), 29.70, .)})
+
+titanic_train_data.head <- titanic_train_data
+
+titanic_test_data.head <- titanic_train_data %>%
+  mutate(Age = NA)
+
+
+modeleAge<-titanic_train_data.head %>%
+  select(Age, Fare, Parch, Survived, SibSp, Pclass, Ticket, Sex) %>%
+  lm(Age ~ Fare + Parch + Survived + SibSp + Pclass + Ticket +Sex, data= .) 
+
+predicted.Age<- predict(modeleAge , newdata =  titanic_test_data.head) 
+
+titanic_train_data$Age<- predicted.Age
+
+Model.Survive<-loglm(Survived ~ age_groups + Sex + Embarked + Title + Pclass + FamilySize + IndividualFare + Ticket , data= titanic_train_data) 
+
+Model.Survive
+```
+
+```{r}
+Model.Survive %>%
+  predict() %>%
+  table()
+
+predicted.Survive<- predict(Model.Survive, newdata = titanic_test_data)
+predicted.Survive %>%
+  table()
+```
+
+```{r}
+features.Equation<-"Age + Sex + Embarked + Title"
+
+PassengerId<- titanic_test_data$PassengerId
+
+output.df<- as.data.frame(PassengerId)
+
+output.df$Survived <- predicted.Survive
+
+write.csv(output.df, file = "Kaggle_new_submission.csv", row.names = FALSE)
+```
